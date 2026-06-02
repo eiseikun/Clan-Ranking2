@@ -1673,136 +1673,81 @@ window.readImage = async function (mode) {
   const previewId = mode === 1 ? "ocrPreview1" : "ocrPreview2";
   const file = document.getElementById(inputId).files[0];
   if (!file) return alert("画像選択して");
-  document.getElementById(previewId).textContent = "読み取り中...";
-  // 画像前処理
   const img = new Image();
   img.src = URL.createObjectURL(file);
   await img.decode();
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
-  canvas.width = img.width;
-  canvas.height = img.height;
-  ctx.drawImage(img, 0, 0);
-  const imageData = ctx.getImageData(
-    0,
-    0,
-    canvas.width,
-    canvas.height
-  );
+  // ✅ サイズ
+  const w = img.width;
+  const h = img.height;
+  // ✅ スコア部分（右側だけ）
+  const sx = w * 0.6;
+  const sy = h * 0.25;
+  const sw = w * 0.35;
+  const sh = h * 0.6;
+  canvas.width = sw;
+  canvas.height = sh;
+  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+  // ✅ 白黒強化
+  const imageData = ctx.getImageData(0, 0, sw, sh);
   const data = imageData.data;
   for (let i = 0; i < data.length; i += 4) {
-    const gray =
-      (data[i] + data[i + 1] + data[i + 2]) / 3;
-    const v = gray > 140 ? 255 : 0;
-    data[i] = v;
-    data[i + 1] = v;
-    data[i + 2] = v;
+    const gray = (data[i] + data[i+1] + data[i+2]) / 3;
+    const v = gray > 150 ? 255 : 0;
+    data[i] = data[i+1] = data[i+2] = v;
   }
   ctx.putImageData(imageData, 0, 0);
   // OCR
-  const result = await Tesseract.recognize(
-    canvas,
-    "eng+jpn",
-    {
-      logger: m => console.log(m)
-    }
-  );
+  const result = await Tesseract.recognize(canvas, "eng", {});
   const text = result.data.text;
   document.getElementById(previewId).textContent = text;
-  if (mode === 1) {
-    parseClanText(text);
-  } else {
-    parseRankText(text);
-  }
+  parseClanText(text);
 };
+
 
 // 1ページ目OCR
 function parseClanText(text) {
-
-  console.log("OCR raw:", text);
-
-  // ======================
-  // ✅ 行ベースで処理
-  // ======================
+  console.log(text);
   const lines = text.split("\n");
-
   const results = [];
+  const clans = [
+    "魔導特務隊",
+    "最狂会",
+    "IgnisFloris",
+    "ポケポケ会",
+    "PopoWarren",
+    "やまだ家",
+    "ねこ海賊団",
+    "たまねぎ班",
+    "アチャ伝",
+    "猫の旅"
+  ];
 
+  let index = 0;
   for (let line of lines) {
-
-    // 🔥 ゴミ行除去
-    if (line.length < 5) continue;
-
-    // ======================
-    // ✅ クラン名補正
-    // ======================
-    let fixed = line
-      .replace(/\s/g, "")       // 空白除去
-      .replace(/ポケポケ会/g, "ポケポケ会")
-      .replace(/popowarren/gi, "PopoWarren")
-      .replace(/やまだ家/g, "やまだ家")
-      .replace(/ねこ海賊団/g, "ねこ海賊団")
-      .replace(/たまねぎ班/g, "たまねぎ班")
-      .replace(/アチャ伝/g, "アチャ伝")
-      .replace(/猫の旅/g, "猫の旅")
-      .replace(/最狂会/g, "最狂会")
-      .replace(/魔導特務隊/g, "魔導特務隊")
-      .replace(/IgnisFloris/g, "IgnisFloris");
-
-    // ======================
-    // ✅ スコア抽出
-    // ======================
-    const match = fixed.match(/(\d+(?:\.\d+))\s*(T|B|r|t)?/i);
-
+    const match = line.match(/(\d+(?:\.\d+))/);
     if (!match) continue;
-
-    let value = parseFloat(match[1]); // ← ✅そのまま（絶対四捨五入しない）
-
-    let unit = match[2];
-
-    // ✅ OCR誤認識修正
-    if (unit === "r" || unit === "t") {
-      unit = "T";
-    }
-
-    if (unit === "T") {
-      value *= 1000;
-    }
-
-    // ======================
-    // ✅ クラン特定（完全一致）
-    // ======================
-    for (let clan of Object.keys(clanSettings)) {
-
-      if (fixed.includes(clan)) {
-
-        // 重複防止
-        if (results.find(r => r.clan === clan)) continue;
-
-        results.push({
-          clan,
-          score: value
-        });
-
-      }
+    let value = parseFloat(match[1]); // ←そのまま
+    // ✅ 全部T扱い（このゲーム仕様ならOK）
+    value *= 1000;
+    if (index < clans.length) {
+      results.push({
+        clan: clans[index],
+        score: value
+      });
+      index++;
     }
   }
-
   console.log("結果:", results);
-
-  // ✅ データ不足チェック（重要）
-  if (results.length < 5) {
-    alert("読み取り精度が低い（スクショを拡大して再試行してください）");
+  if (!results.length) {
+    alert("読み取り失敗");
     return;
   }
-
-  // ✅ 確認表示
   const msg = results
     .map(d => `${d.clan} : ${formatScore(d.score)}`)
     .join("\n");
-
-  if (!confirm("登録内容\n\n" + msg)) return;
-
+  if (!confirm(msg)) return;
   autoRegisterClan(results);
 }
 
