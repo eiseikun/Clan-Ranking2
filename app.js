@@ -1668,93 +1668,132 @@ window.drawChart3 = function () {
 // ==============================
 // 共通OCR
 // ==============================
-window.readImage = async function (mode) {
-  const inputId = mode === 1 ? "imageInput1" : "imageInput2";
-  const previewId = mode === 1 ? "ocrPreview1" : "ocrPreview2";
-  const file = document.getElementById(inputId).files[0];
-  if (!file) return alert("画像選択して");
-  const img = new Image();
-  img.src = URL.createObjectURL(file);
-  await img.decode();
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  // ✅ サイズ
-  const w = img.width;
-  const h = img.height;
-  // ✅ スコア部分（右側だけ）
-  const sx = w * 0.6;
-  const sy = h * 0.25;
-  const sw = w * 0.35;
-  const sh = h * 0.6;
-  canvas.width = sw;
-  canvas.height = sh;
-  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
-  // ✅ 白黒強化
-  const imageData = ctx.getImageData(0, 0, sw, sh);
-  const data = imageData.data;
-  for (let i = 0; i < data.length; i += 4) {
-    const gray = (data[i] + data[i+1] + data[i+2]) / 3;
-    const v = gray > 150 ? 255 : 0;
-    data[i] = data[i+1] = data[i+2] = v;
+window.readImage = async function () {
+  const files = document.getElementById("imageInput1").files;
+  if (!files.length) return alert("画像選択して");
+  let allScores = [];
+  for (let file of files) {
+    const img = new Image();
+    img.src = URL.createObjectURL(file);
+    await img.decode();
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const w = img.width;
+    const h = img.height;
+    // ✅ スコア部分切り抜き
+    const sx = w * 0.55;
+    const sy = h * 0.25;
+    const sw = w * 0.4;
+    const sh = h * 0.65;
+    canvas.width = sw;
+    canvas.height = sh;
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+    // ✅ 白黒強化
+    const imageData = ctx.getImageData(0, 0, sw, sh);
+    const data = imageData.data;
+    for (let i = 0; i < data.length; i += 4) {
+      const gray = (data[i] + data[i+1] + data[i+2]) / 3;
+      const v = gray > 150 ? 255 : 0;
+      data[i] = data[i+1] = data[i+2] = v;
+    }
+    ctx.putImageData(imageData, 0, 0);
+    const result = await Tesseract.recognize(canvas, "eng");
+    const scores = extractScores(result.data.text);
+    allScores = allScores.concat(scores);
   }
-  ctx.putImageData(imageData, 0, 0);
-  // OCR
-  const result = await Tesseract.recognize(canvas, "eng", {});
-  const text = result.data.text;
-  document.getElementById(previewId).textContent = text;
-  parseClanText(text);
+  // ✅ 重複削除
+  const unique = [...new Set(allScores)];
+  renderOCRTable(unique);
 };
 
 
 // 1ページ目OCR
-function parseClanText(text) {
-  console.log(text);
-  const lines = text.split("\n");
-  const results = [];
-  const clans = [
-    "魔導特務隊",
-    "最狂会",
-    "IgnisFloris",
-    "ポケポケ会",
-    "PopoWarren",
-    "やまだ家",
-    "ねこ海賊団",
-    "たまねぎ班",
-    "アチャ伝",
-    "猫の旅"
-  ];
+function extractScores(text) {
 
-  let index = 0;
+  const lines = text.split("\n");
+
+  const scores = [];
+
   for (let line of lines) {
+
     const match = line.match(/(\d+(?:\.\d+))/);
     if (!match) continue;
-    let value = parseFloat(match[1]); // ←そのまま
-    // ✅ 全部T扱い（このゲーム仕様ならOK）
-    value *= 1000;
-    if (index < clans.length) {
-      results.push({
-        clan: clans[index],
-        score: value
-      });
-      index++;
-    }
+
+    const value = parseFloat(match[1]); // ✅そのまま
+
+    scores.push(value * 1000); // T扱い
   }
-  console.log("結果:", results);
-  if (!results.length) {
-    alert("読み取り失敗");
-    return;
-  }
-  const msg = results
-    .map(d => `${d.clan} : ${formatScore(d.score)}`)
-    .join("\n");
-  if (!confirm(msg)) return;
-  autoRegisterClan(results);
+
+  return scores;
 }
 
+function renderOCRTable(scores) {
 
-async function autoRegisterClan(list) {
-  const date = new Date().toISOString().slice(0,10);
-  for (let d of list) {
+  const container = document.getElementById("ocrResultTable");
+
+  const clans = Object.keys(clanSettings);
+
+  let html = "<table>";
+  html += "<tr><th>クラン</th><th>スコア</th></tr>";
+
+  scores.forEach((score, i) => {
+
+    html += `
+      <tr>
+        <td>
+          <select class="ocr-clan">
+            <option value="">選択</option>
+            ${clans.map(c => `<option value="${c}">${c}</option>`).join("")}
+          </select>
+        </td>
+        <td>
+          <input type="number" step="0.01" class="ocr-score" value="${(score / 1000)}">
+        </td>
+      </tr>
+    `;
+  });
+
+  html += "</table>";
+
+  container.innerHTML = html;
+}
+
+window.submitOCR = async function () {
+
+  const rows = document.querySelectorAll("#ocrResultTable tr");
+
+  const date = document.getElementById("date").value;
+
+  if (!date) {
+    alert("日付選択して");
+    return;
+  }
+
+  const data = [];
+
+  rows.forEach((row, i) => {
+
+    if (i === 0) return;
+
+    const clan = row.querySelector(".ocr-clan")?.value;
+    const scoreInput = row.querySelector(".ocr-score")?.value;
+
+    if (!clan || !scoreInput) return;
+
+    const score = Number(scoreInput) * 1000;
+
+    data.push({ clan, score });
+  });
+
+  if (!data.length) {
+    alert("データなし");
+    return;
+  }
+
+  if (!confirm(`${data.length}件登録する？`)) return;
+
+  for (let d of data) {
+
     await setDoc(doc(db, "scores", `${date}_${d.clan}`), {
       clan: d.clan,
       score: d.score,
@@ -1762,8 +1801,10 @@ async function autoRegisterClan(list) {
       time: Date.now()
     });
   }
-  alert("✅ クラン自動登録完了！");
-}
+
+  alert("✅ 登録完了！");
+};
+
 // 2ページ目OCR
 function parseRankText(text) {
   const lines = text.split("\n");
