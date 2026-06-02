@@ -7,7 +7,6 @@
 
 <link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 
@@ -53,24 +52,7 @@
     <button onclick="saveWeekdayBestImage()">📸 曜日別画像保存</button>
   </div>
 </div>
-   <!-- 読み取り機能 -->
-  <div class="box">
-  <h3>📷 画像から自動入力（クラン）</h3>
-  <div class="row">
-    <input type="file" id="imageInput1" accept="image/*" multiple>
-  </div>
-  <div class="row">
-    <button onclick="readImage(1)">読み取り</button>
-  </div>
-  <div id="ocrPreview1" style="font-size:12px; white-space:pre-wrap;"></div>
-</div>
-
-  <div id="ocrResultTable"></div>
-
-<div class="row">
-  <button onclick="submitOCR()">登録</button>
-</div>
-
+  
   
   <!-- データ追加 -->
   <div class="box">
@@ -144,25 +126,7 @@
       <button onclick="saveAvgRankImage()">📸 平均順位</button>
     </div>
   </div>
-  
-   <!-- 読み取り機能 -->
-  <div class="box">
-  <h3>📷 画像から自動入力（順位）</h3>
 
-  <div class="row">
-    <input type="file" id="imageInput2" accept="image/*">
-  </div>
-
-  <div class="row">
-    <button onclick="readImage(2)">読み取り</button>
-  </div>
-
-  <div id="ocrPreview2" style="font-size:12px; white-space:pre-wrap;"></div>
-</div>
-
-
-
-  
   <!-- 順位追加 -->
   <div class="box">
     <h3>➕ 順位データ追加</h3>
