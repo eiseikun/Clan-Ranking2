@@ -1669,41 +1669,72 @@ window.drawChart3 = function () {
 // 共通OCR
 // ==============================
 window.readImage = async function () {
+
   const files = document.getElementById("imageInput1").files;
   if (!files.length) return alert("画像選択して");
+
   let allScores = [];
+
   for (let file of files) {
+
     const img = new Image();
     img.src = URL.createObjectURL(file);
     await img.decode();
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
+
     const w = img.width;
     const h = img.height;
-    // ✅ スコア部分切り抜き
-    const sx = w * 0.55;
-    const sy = h * 0.25;
-    const sw = w * 0.4;
-    const sh = h * 0.65;
-    canvas.width = sw;
-    canvas.height = sh;
-    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
-    // ✅ 白黒強化
-    const imageData = ctx.getImageData(0, 0, sw, sh);
-    const data = imageData.data;
-    for (let i = 0; i < data.length; i += 4) {
-      const gray = (data[i] + data[i+1] + data[i+2]) / 3;
-      const v = gray > 150 ? 255 : 0;
-      data[i] = data[i+1] = data[i+2] = v;
-    }
-    ctx.putImageData(imageData, 0, 0);
-    const result = await Tesseract.recognize(canvas, "eng");
-    const scores = extractScores(result.data.text);
-    allScores = allScores.concat(scores);
+
+    // ======================
+    // ✅ 上位3専用（中央）
+    // ======================
+    const canvasTop = document.createElement("canvas");
+    const ctxTop = canvasTop.getContext("2d");
+
+    const topX = w * 0.25;
+    const topY = h * 0.1;
+    const topW = w * 0.5;
+    const topH = h * 0.25;
+
+    canvasTop.width = topW;
+    canvasTop.height = topH;
+
+    ctxTop.drawImage(img, topX, topY, topW, topH, 0, 0, topW, topH);
+
+    const topResult = await Tesseract.recognize(canvasTop, "eng");
+
+    const topScores = extractScores(topResult.data.text);
+
+    // ======================
+    // ✅ 下ランキング（4位以降）
+    // ======================
+    const canvasBottom = document.createElement("canvas");
+    const ctxBottom = canvasBottom.getContext("2d");
+
+    const sx = w * 0.15;
+    const sy = h * 0.35;
+    const sw = w * 0.7;
+    const sh = h * 0.6;
+
+    canvasBottom.width = sw;
+    canvasBottom.height = sh;
+
+    ctxBottom.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+
+    const bottomResult = await Tesseract.recognize(canvasBottom, "eng");
+
+    const bottomScores = extractScores(bottomResult.data.text);
+
+    allScores = allScores
+      .concat(topScores)
+      .concat(bottomScores);
   }
-  // ✅ 重複削除
-  const unique = [...new Set(allScores)];
-  renderOCRTable(unique);
+
+  // ✅ 精度改善：異常値除去
+  const cleaned = allScores
+    .filter(v => v > 5 && v < 1000) // ←ここ超重要
+    .sort((a, b) => b - a);
+
+  renderOCRTable(cleaned);
 };
 
 
@@ -1719,13 +1750,17 @@ function extractScores(text) {
     const match = line.match(/(\d+(?:\.\d+))/);
     if (!match) continue;
 
-    const value = parseFloat(match[1]); // ✅そのまま
+    let value = parseFloat(match[1]);
 
-    scores.push(value * 1000); // T扱い
+    // ✅ 明らかにおかしい値排除
+    if (value < 1) continue;
+
+    scores.push(value * 1000);
   }
 
   return scores;
 }
+
 
 function renderOCRTable(scores) {
 
