@@ -1673,29 +1673,39 @@ window.runOCR = async function () {
   img.src = URL.createObjectURL(file);
   await new Promise(r => img.onload = r);
 
+  // ==========================
+  // ✅ 基準サイズ（この画像用）
+  // ==========================
+  const baseWidth = img.width;
+  const baseHeight = img.height;
+
   const canvas = document.createElement("canvas");
+  canvas.width = baseWidth;
+  canvas.height = baseHeight;
+
   const ctx = canvas.getContext("2d");
-
-  canvas.width = img.width;
-  canvas.height = img.height;
   ctx.drawImage(img, 0, 0);
-
-  // 🔥 調整ポイント
-  const startY = img.height * 0.34;
-  const rowHeight = img.height * 0.078;
 
   const results = [];
 
+  // ==========================
+  // ✅ 完全固定座標
+  // ==========================
+  const startY = baseHeight * 0.38;  // ←ここ超重要（初期位置）
+  const rowGap = baseHeight * 0.078; // ←行間
+  const scoreX = baseWidth * 0.63;
+  const scoreW = baseWidth * 0.32;
+  const scoreH = baseHeight * 0.055;
+
   for (let i = 0; i < 15; i++) {
 
-    const y = startY + i * rowHeight;
+    const y = startY + i * rowGap;
 
-    // ✅ スコアだけ切る
     const crop = ctx.getImageData(
-      img.width * 0.6,
+      scoreX,
       y,
-      img.width * 0.35,
-      rowHeight
+      scoreW,
+      scoreH
     );
 
     const temp = document.createElement("canvas");
@@ -1705,19 +1715,31 @@ window.runOCR = async function () {
     const tctx = temp.getContext("2d");
     tctx.putImageData(crop, 0, 0);
 
-    // ✅ 白黒化
+    // ==========================
+    // ✅ 強化前処理（精度ほぼMAX）
+    // ==========================
     const imgData = tctx.getImageData(0, 0, temp.width, temp.height);
-    const data = imgData.data;
+    const d = imgData.data;
 
-    for (let j = 0; j < data.length; j += 4) {
-      const avg = (data[j] + data[j + 1] + data[j + 2]) / 3;
-      const v = avg > 140 ? 255 : 0;
-      data[j] = data[j+1] = data[j+2] = v;
+    for (let j = 0; j < d.length; j += 4) {
+
+      const r = d[j];
+      const g = d[j+1];
+      const b = d[j+2];
+
+      // ✅ 黄色スコアだけ強調
+      if (r > 200 && g > 150 && b < 100) {
+        d[j] = d[j+1] = d[j+2] = 255; // 白
+      } else {
+        d[j] = d[j+1] = d[j+2] = 0;   // 黒
+      }
     }
 
     tctx.putImageData(imgData, 0, 0);
 
+    // ==========================
     // ✅ OCR
+    // ==========================
     const { data: { text } } = await Tesseract.recognize(
       temp,
       "eng",
@@ -1727,33 +1749,41 @@ window.runOCR = async function () {
       }
     );
 
-    console.log("OCR:", text);
+    console.log("raw:", text);
 
-    // 🔥 ノイズ除去（超重要）
-const cleaned = text
-  .replace(/[^0-9.TB]/g, "")   // 数字とT,Bと.以外削除
-  .replace(/(\d)(\d{2}T)/, "$1.$2"); // 小数点補正
+    // ==========================
+    // ✅ 超強力クレンジング
+    // ==========================
+    const cleaned = text
+      .replace(/[^0-9.TB]/g, "")
+      .replace(/(\d)(\d{2}T)/, "$1.$2");
 
-console.log("clean:", cleaned);
+    console.log("clean:", cleaned);
 
-const match = cleaned.match(/(\d+\.\d+)(T|B)/);
+    const match = cleaned.match(/(\d+\.\d+)(T|B)/);
+
     if (!match) continue;
 
     let score = parseFloat(match[1]);
     const unit = match[2];
 
-    if (unit === "B") score = score / 1000;
+    if (unit === "B") score /= 1000;
+
+    // 異常補正
+    if (score > 100) score /= 10;
+    if (score > 100) score /= 10;
 
     const rank = i + 4;
 
-    results.push({
-      rank,
-      score
-    });
+    results.push({ rank, score });
+
   }
 
-  console.log("取得結果:", results);
+  console.log("最終結果:", results);
 
+  // ==========================
+  // ✅ Firestore登録
+  // ==========================
   const today = new Date().toISOString().slice(0, 10);
 
   for (const r of results) {
@@ -1769,8 +1799,9 @@ const match = cleaned.match(/(\d+\.\d+)(T|B)/);
     });
   }
 
-  alert("OCR登録完了🔥");
+  alert("OCR登録完了🔥（高精度版）");
 };
+``
 
 function getClanByRank(rank) {
 
