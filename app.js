@@ -1718,45 +1718,86 @@ window.readImage = async function (mode) {
 
 // 1ページ目OCR
 function parseClanText(text) {
-  console.log(text);
-  // 🔥 OCR補正（強化）
+  console.log("OCR raw:", text);
+  // 🔧 OCR補正
   let normalized = text
-    .replace(/\s/g, "")         // 空白削除
+    .replace(/\s/g, "")
     .replace(/農/g, "賊")
     .replace(/ボ/g, "団")
-    .replace(/ご/g, "こ")
     .replace(/体/g, "隊")
-    .replace(/r/g, "T")         // ← 超重要！
+    .replace(/ご/g, "こ")
+    .replace(/r/g, "T")
     .replace(/t/g, "T");
+  console.log("normalized:", normalized);
   const results = [];
   const clanList = Object.keys(clanSettings);
+  // ✅ ① 上位3専用処理
   clanList.forEach(clan => {
-    const simpleName = clan.replace(/[^\wぁ-んァ-ン一-龯]/g, "");
-    if (!normalized.includes(simpleName)) return;
-    const pos = normalized.indexOf(simpleName);
-    const area = normalized.substring(pos, pos + 300);
-    const match = area.match(/(\d+(?:\.\d+)?)(T|B)/);
-    if (!match) return;
-    let score = parseFloat(match[1]);
-    if (match[2] === "T") {
-      score *= 1000;
+    const simple = clan.replace(/\s/g, "");
+    const regex = new RegExp(
+      simple + "([0-9]+(?:\\.[0-9]+)?)(T|B)",
+      "i"
+    );
+    const match = normalized.match(regex);
+    if (match) {
+      let value = parseFloat(match[1]); // ✅そのまま
+      if (match[2] === "T") value *= 1000;
+      // 重複防止
+      if (!results.find(r => r.clan === clan)) {
+        results.push({
+          clan,
+          score: value
+        });
+      }
     }
-    results.push({
-      clan,
-      score
-    });
   });
-  console.log("抽出結果:", results);
+  // ✅ ② 全順位用処理（スコア起点）
+  const scoreMatches =
+    normalized.matchAll(/([0-9]+(?:\.[0-9]+)?)(T|B)?/g);
+  for (let match of scoreMatches) {
+    const rawValue = match[1];
+    let value = parseFloat(rawValue);
+    // ✅ 単位判定
+    if (match[2] === "T") {
+      value *= 1000;
+    } else if (match[2] === "B") {
+      // そのまま
+    } else {
+      // 🔥 単位欠け対策（今回の画像対応）
+      if (value > 5) {
+        value *= 1000; // T扱い
+      }
+    }
+    const pos = match.index;
+    const area = normalized.substring(
+      Math.max(0, pos - 200),
+      pos + 200
+    );
+    clanList.forEach(clan => {
+      const simple = clan.replace(/\s/g, "");
+      if (!area.includes(simple)) return;
+      if (results.find(r => r.clan === clan)) return;
+      results.push({
+        clan,
+        score: value
+      });
+    });
+  }
+  // ✅ ソート（任意）
+  results.sort((a, b) => b.score - a.score);
+  console.log("最終結果:", results);
   if (!results.length) {
-    alert("クラン読み取り失敗（精度不足）");
+    alert("読み取り失敗（精度不足）");
     return;
   }
+  // ✅ 表示（小数そのまま）
   const msg = results
     .map(d => `${d.clan} : ${formatScore(d.score)}`)
     .join("\n");
   if (!confirm(`以下を登録します\n\n${msg}`)) return;
   autoRegisterClan(results);
 }
+
 
 
 async function autoRegisterClan(list) {
