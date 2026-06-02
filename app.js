@@ -1729,7 +1729,14 @@ window.runOCR = async function () {
 
     console.log("OCR:", text);
 
-    const match = text.match(/(\d+\.\d+)(T|B)/);
+    // 🔥 ノイズ除去（超重要）
+const cleaned = text
+  .replace(/[^0-9.TB]/g, "")   // 数字とT,Bと.以外削除
+  .replace(/(\d)(\d{2}T)/, "$1.$2"); // 小数点補正
+
+console.log("clean:", cleaned);
+
+const match = cleaned.match(/(\d+\.\d+)(T|B)/);
     if (!match) continue;
 
     let score = parseFloat(match[1]);
