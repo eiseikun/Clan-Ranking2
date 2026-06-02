@@ -1691,8 +1691,8 @@ window.runOCR = async function () {
   const startY = h * 0.37;
   const rowGap = h * 0.078;
 
-  const scoreX = w * 0.50;
-  const scoreW = w * 0.42;
+  const scoreX = w * 0.68;
+  const scoreW = w * 0.28;
   const scoreH = h * 0.055;
 
   const results = [];
