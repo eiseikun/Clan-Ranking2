@@ -1717,68 +1717,105 @@ window.readImage = async function (mode) {
 };
 
 // 1ページ目OCR
-function autoFixClanName(raw) {
+function parseClanText(text) {
 
-  const input = normalizeText(raw);
-  const clans = Object.keys(clanSettings);
+  console.log("OCR RAW:\n", text);
 
-  let bestMatch = raw;
-  let bestScore = 0;
+  // ======================
+  // ✅ 前処理
+  // ======================
+  const cleaned = text
+    .replace(/,/g, "")
+    .replace(/r/g, "T")
+    .replace(/t/g, "T");
 
-  for (let clan of clans) {
+  // ======================
+  // ✅ スコア抽出
+  // ======================
+  const scoreMatches = [...cleaned.matchAll(/(\d+(?:\.\d+))/g)];
 
-    const target = normalizeText(clan);
+  const scores = scoreMatches.map(m => ({
+    value: parseFloat(m[1]),
+    index: m.index
+  }));
 
-    // ======================
-    // ✅ ① 部分一致スコア
-    // ======================
-    let common = 0;
+  // ======================
+  // ✅ クラン候補抽出
+  // ======================
+  const nameMatches = [...cleaned.matchAll(/[A-Za-zぁ-んァ-ン一-龯]+/g)];
 
-    for (let char of target) {
-      if (input.includes(char)) common++;
+  const names = nameMatches.map(m => ({
+    value: m[0],
+    index: m.index
+  }));
+
+  const results = [];
+
+  // ======================
+  // ✅ 近いもの同士をペア
+  // ======================
+  for (let s of scores) {
+
+    let nearest = null;
+    let minDist = Infinity;
+
+    for (let n of names) {
+
+      const dist = Math.abs(n.index - s.index);
+
+      if (dist < minDist) {
+        minDist = dist;
+        nearest = n.value;
+      }
     }
 
-    const score1 = common / target.length;
+    if (!nearest) continue;
 
-    // ======================
-    // ✅ ② 文字位置一致（補助）
-    // ======================
-    let samePos = 0;
+    // ✅ スコア補正
+    let value = s.value;
+    if (value > 10) value *= 1000;
 
-    for (let i = 0; i < Math.min(input.length, target.length); i++) {
-      if (input[i] === target[i]) samePos++;
-    }
+    // ✅ クラン補正
+    const clan = autoFixClanName(nearest);
 
-    const score2 = samePos / target.length;
-
-    // ======================
-    // ✅ ③ 長さ補正
-    // ======================
-    const lengthScore =
-      Math.min(input.length, target.length) /
-      Math.max(input.length, target.length);
-
-    // ======================
-    // ✅ 合計スコア（重要）
-    // ======================
-    const total =
-      score1 * 0.6 +
-      score2 * 0.3 +
-      lengthScore * 0.1;
-
-    if (total > bestScore) {
-      bestScore = total;
-      bestMatch = clan;
-    }
+    results.push({
+      clan,
+      score: value
+    });
   }
 
-  // ✅ 閾値（かなり厳しめ）
-  if (bestScore > 0.6) {
-    return bestMatch;
+  // ======================
+  // ✅ 重複除去
+  // ======================
+  const unique = [];
+
+  results.forEach(r => {
+    if (!unique.find(u => Math.abs(u.score - r.score) < 1)) {
+      unique.push(r);
+    }
+  });
+
+  // ======================
+  // ✅ ソート
+  // ======================
+  unique.sort((a, b) => b.score - a.score);
+
+  console.log("結果:", unique);
+
+  if (unique.length < 5) {
+    alert("精度不足（画像をトリミング推奨）");
+    return;
   }
 
-  return raw;
+  const msg = unique
+    .map(d => `${d.clan} : ${formatScore(d.score)}`)
+    .join("\n");
+
+  if (!confirm(msg)) return;
+
+  autoRegisterClan(unique);
 }
+
 
 
 
