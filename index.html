@@ -57,13 +57,20 @@
   <div class="box">
   <h3>📷 画像から自動入力（クラン）</h3>
   <div class="row">
-    <input type="file" id="imageInput1" accept="image/*">
+    <input type="file" id="imageInput1" accept="image/*" multiple>
   </div>
   <div class="row">
     <button onclick="readImage(1)">読み取り</button>
   </div>
   <div id="ocrPreview1" style="font-size:12px; white-space:pre-wrap;"></div>
 </div>
+
+  <div id="ocrResultTable"></div>
+
+<div class="row">
+  <button onclick="submitOCR()">登録</button>
+</div>
+
   
   <!-- データ追加 -->
   <div class="box">
