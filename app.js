@@ -1845,33 +1845,38 @@ window.runOCRMain = async function(){
 };
 // 表示
 function renderOCRResultHigh(){
-
-  let html = "<table><tr><th>クラン</th><th>スコア</th></tr>";
-
+  let html = "<table><tr><th>クラン</th><th>スコア（修正可）</th></tr>";
   for(const c of activeClans){
+    const val = ocrResultMap[c];
     html += `<tr>
       <td>${c}</td>
-      <td>${ocrResultMap[c] ?? ""}</td>
+      <td>
+        <input 
+          type="number"
+          step="0.01"
+          value="${val ?? ""}"
+          data-clan="${c}"
+        >
+      </td>
     </tr>`;
   }
-
   html += "</table>";
-
   document.getElementById("ocrResult").innerHTML = html;
 }
+
 // Firebase保存（完全連携）
 window.saveOCRHigh = async function(){
 
-  if(!Object.keys(ocrResultMap).length){
-    return alert("OCR実行して");
-  }
+  const inputs = document.querySelectorAll("#ocrResult input");
 
   const date = document.getElementById("date").value;
   if(!date) return alert("日付入れて");
 
-  for(const clan in ocrResultMap){
+  for(const input of inputs){
 
-    const scoreT = ocrResultMap[clan];
+    const clan = input.dataset.clan;
+    const scoreT = Number(input.value);
+
     if(!scoreT) continue;
 
     const scoreB = scoreT * 1000;
@@ -1884,5 +1889,5 @@ window.saveOCRHigh = async function(){
     });
   }
 
-  alert("OCR保存完了");
+  alert("修正込みで保存完了 👍");
 };
