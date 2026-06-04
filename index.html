@@ -43,6 +43,26 @@
 
   <!-- CSV管理 -->
  <div id="manageArea" class="box" style="display:none;">
+   
+   <!-- OCR読取 -->
+<div class="box">
+  <h3>📷 OCR読取（高精度版）</h3>
+  <label>
+    <input type="checkbox" id="debugToggleMain">
+    デバッグ
+  </label>
+  <div class="row">
+    <input type="file" id="img1Main">
+    <input type="file" id="img2Main">
+  </div>
+  <div class="row">
+    <button onclick="runOCRMain()">OCR解析</button>
+    <button onclick="saveOCRHigh()">保存</button>
+  </div>
+  <div id="ocrResult"></div>
+  <div id="debugMain"></div>
+</div>
+
   <input type="file" id="csvFile">
   <div class="row">
     <button onclick="importCSV()">CSV取込</button>
