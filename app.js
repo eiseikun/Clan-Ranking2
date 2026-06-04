@@ -2,12 +2,13 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // =============================
+// Firebase
+// =============================
 const firebaseConfig = {
   apiKey: "AIzaSyBCBvYwXTGGAGw40lrq0-QBLN_Bm8eqRL4",
   authDomain: "clan-ranking2.firebaseapp.com",
   projectId: "clan-ranking2",
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
@@ -21,17 +22,17 @@ const clans = [
 ];
 
 // =============================
-// ★★★★★ 調整ポイント ★★★★★
+// ★★★★★ 上位座標（ここを動かす）★★★★★
 
-// ===== 1位（中央）=====
+// ▼1位（中央）
 const TOP1 = {
-  nameX: 450,   // クラン名位置
-  nameY: 590,
-  scoreX: 450,  // スコア位置（下）
+  nameX: 450,  // ← 横ズレ
+  nameY: 590,  // ← 縦ズレ
+  scoreX: 450,
   scoreY: 650
 };
 
-// ===== 2位（左）=====
+// ▼2位（左）
 const TOP2 = {
   nameX: 120,
   nameY: 600,
@@ -39,7 +40,7 @@ const TOP2 = {
   scoreY: 700
 };
 
-// ===== 3位（右）=====
+// ▼3位（右）
 const TOP3 = {
   nameX: 850,
   nameY: 600,
@@ -47,17 +48,34 @@ const TOP3 = {
   scoreY: 700
 };
 
-// ==== サイズ ====
-const NAME_W = 300;
-const NAME_H = 80;
+// =============================
+// ★★★★★ サイズ調整（超重要）★★★★★
 
-const SCORE_W = 300;
-const SCORE_H = 90;
+// ▼1位（大きめ）
+const TOP1_NAME_W = 360;
+const TOP1_NAME_H = 100;
+const TOP1_SCORE_W = 360;
+const TOP1_SCORE_H = 110;
 
-// ===== 4位以降 =====
-// ↓ 全体上下移動するならここ
+// ▼2位・3位（中）
+const TOP23_NAME_W = 300;
+const TOP23_NAME_H = 80;
+const TOP23_SCORE_W = 300;
+const TOP23_SCORE_H = 90;
+
+// ▼4位以降（小）
+const ROW_NAME_W = 300;
+const ROW_NAME_H = 80;
+const ROW_SCORE_W = 300;
+const ROW_SCORE_H = 90;
+
+
+// =============================
+// ★★★★★ 4位以降ここが一番触る場所 ★★★★★
+
+// ▼縦位置（全部上下する）
 const rows = [
-  { y:1050 },
+  { y:1050 }, // ← 4位
   { y:1200 },
   { y:1350 },
   { y:1500 },
@@ -66,11 +84,12 @@ const rows = [
   { y:1950 }
 ];
 
-// ↓ 名前横位置
+// ▼名前位置（左右ズレ）
 const NAME_X = 200;
 
-// ↓ スコア横位置（ここ超重要）
+// ▼スコア位置（超重要）
 const SCORE_X = 760;
+
 
 // =============================
 function isDebug(){
@@ -97,7 +116,7 @@ function drawCross(ctx,x,y){
 }
 
 // =============================
-// OCR前処理
+// 前処理
 // =============================
 function preprocess(ctx,w,h){
   const img = ctx.getImageData(0,0,w,h);
@@ -105,7 +124,10 @@ function preprocess(ctx,w,h){
 
   for(let i=0;i<d.length;i+=4){
     const gray = d[i]*0.3 + d[i+1]*0.59 + d[i+2]*0.11;
+
+    // ★ここで精度変わる（150〜170調整可）
     const v = gray>150?255:0;
+
     d[i]=d[i+1]=d[i+2]=v;
   }
 
@@ -115,11 +137,14 @@ function preprocess(ctx,w,h){
 // =============================
 function crop(canvas,x,y,w,h){
   const c = document.createElement("canvas");
+
+  // ★拡大（精度上がる）
   c.width = w*2;
   c.height = h*2;
 
   const ctx = c.getContext("2d");
   ctx.drawImage(canvas,x,y,w,h,0,0,w*2,h*2);
+
   preprocess(ctx,w*2,h*2);
 
   if(isDebug()){
@@ -157,12 +182,28 @@ function matchClan(text){
 }
 
 // =============================
-// ★ 上位専用
+// ★ 上位（サイズ分岐）
 // =============================
-async function readTop(canvas, pos){
+async function readTop(canvas, pos, type){
 
-  const nameCrop = crop(canvas, pos.nameX, pos.nameY, NAME_W, NAME_H);
-  const scoreCrop = crop(canvas, pos.scoreX, pos.scoreY, SCORE_W, SCORE_H);
+  let nameW, nameH, scoreW, scoreH;
+
+  if(type === 1){
+    // ▼1位
+    nameW = TOP1_NAME_W;
+    nameH = TOP1_NAME_H;
+    scoreW = TOP1_SCORE_W;
+    scoreH = TOP1_SCORE_H;
+  }else{
+    // ▼2・3位
+    nameW = TOP23_NAME_W;
+    nameH = TOP23_NAME_H;
+    scoreW = TOP23_SCORE_W;
+    scoreH = TOP23_SCORE_H;
+  }
+
+  const nameCrop = crop(canvas, pos.nameX, pos.nameY, nameW, nameH);
+  const scoreCrop = crop(canvas, pos.scoreX, pos.scoreY, scoreW, scoreH);
 
   const name = matchClan(await readName(nameCrop));
   const score = await readScore(scoreCrop);
@@ -171,12 +212,12 @@ async function readTop(canvas, pos){
 }
 
 // =============================
-// ★ 下位
+// ▼4位以降
 // =============================
 async function readRow(canvas,y){
 
-  const nameCrop = crop(canvas, NAME_X, y, NAME_W, NAME_H);
-  const scoreCrop = crop(canvas, SCORE_X, y, SCORE_W, SCORE_H);
+  const nameCrop = crop(canvas, NAME_X, y, ROW_NAME_W, ROW_NAME_H);
+  const scoreCrop = crop(canvas, SCORE_X, y, ROW_SCORE_W, ROW_SCORE_H);
 
   const name = matchClan(await readName(nameCrop));
   const score = await readScore(scoreCrop);
@@ -203,7 +244,7 @@ window.runOCR = async function(){
       document.getElementById("debug").appendChild(canvas);
     }
 
-    // クリック用
+    // ▼クリックで座標確認
     canvas.onclick = (e)=>{
       if(!isDebug()) return;
       const rect = canvas.getBoundingClientRect();
@@ -214,14 +255,25 @@ window.runOCR = async function(){
     };
 
     // ===== 上位 =====
-    for(const pos of [TOP1, TOP2, TOP3]){
+    const topList = [
+      { ...TOP1, type:1 },
+      { ...TOP2, type:2 },
+      { ...TOP3, type:2 }
+    ];
+
+    for(const pos of topList){
+
+      const nameW = (pos.type === 1) ? TOP1_NAME_W : TOP23_NAME_W;
+      const nameH = (pos.type === 1) ? TOP1_NAME_H : TOP23_NAME_H;
+      const scoreW = (pos.type === 1) ? TOP1_SCORE_W : TOP23_SCORE_W;
+      const scoreH = (pos.type === 1) ? TOP1_SCORE_H : TOP23_SCORE_H;
 
       if(isDebug()){
-        drawRect(ctx,pos.nameX,pos.nameY,NAME_W,NAME_H,"green");
-        drawRect(ctx,pos.scoreX,pos.scoreY,SCORE_W,SCORE_H,"blue");
+        drawRect(ctx,pos.nameX,pos.nameY,nameW,nameH,"green");
+        drawRect(ctx,pos.scoreX,pos.scoreY,scoreW,scoreH,"blue");
       }
 
-      const r = await readTop(canvas,pos);
+      const r = await readTop(canvas,pos,pos.type);
 
       if(r.name && r.score){
         all.push(r);
@@ -232,8 +284,8 @@ window.runOCR = async function(){
     for(const r of rows){
 
       if(isDebug()){
-        drawRect(ctx,NAME_X,r.y,NAME_W,NAME_H,"green");
-        drawRect(ctx,SCORE_X,r.y,SCORE_W,SCORE_H,"red");
+        drawRect(ctx,NAME_X,r.y,ROW_NAME_W,ROW_NAME_H,"green");
+        drawRect(ctx,SCORE_X,r.y,ROW_SCORE_W,ROW_SCORE_H,"red");
       }
 
       const row = await readRow(canvas,r.y);
@@ -244,13 +296,14 @@ window.runOCR = async function(){
     }
   }
 
-  // 重複排除
+  // =============================
+  // 集約＆順位
+  // =============================
   const map = {};
   for(const r of all){
     map[r.name] = r.score;
   }
 
-  // 順位計算
   const sorted = Object.entries(map)
     .sort((a,b)=>b[1]-a[1]);
 
@@ -328,4 +381,3 @@ function toCanvas(img){
   c.getContext("2d").drawImage(img,0,0);
   return c;
 }
-``
