@@ -1738,22 +1738,36 @@ function matchClan(text){
   return min <= 3 ? best : null;
 }
 // 読み取り本体
-async function readTop(canvas,pos){
-
-  drawRect(canvas.getContext("2d"),pos.nameX,pos.nameY,250,70,"green");
-  drawRect(canvas.getContext("2d"),pos.scoreX,pos.scoreY,200,80,"blue");
-
-  const name = matchClan(await readName(crop(canvas,pos.nameX,pos.nameY,250,70)));
-  const score = await readScore(crop(canvas,pos.scoreX,pos.scoreY,200,80));
-
+async function readTop(canvas,pos,rank){
+  let nameW, nameH, scoreW, scoreH;
+  if(rank === 1){
+    nameW = 300;
+    nameH = 80;
+    scoreW = 230;
+    scoreH = 90;
+  }// 1位の大きさ
+  else if(rank === 2){
+    nameW = 280;
+    nameH = 75;
+    scoreW = 220;
+    scoreH = 85;
+  }// 2位の大きさ
+  else if(rank === 3){
+    nameW = 260;
+    nameH = 70;
+    scoreW = 210;
+    scoreH = 80;
+  }// 3位の大きさ
+  drawRect(canvas.getContext("2d"), pos.nameX, pos.nameY, nameW, nameH, "green");
+  drawRect(canvas.getContext("2d"), pos.scoreX, pos.scoreY, scoreW, scoreH, "blue");
+  const name = matchClan(await readName(crop(canvas,pos.nameX,pos.nameY,nameW,nameH)));
+  const score = await readScore(crop(canvas,pos.scoreX,pos.scoreY,scoreW,scoreH));
   return {name,score};
 }
-
+// 読み取り本体
 async function readRow(canvas,y){
-
   drawRect(canvas.getContext("2d"),NAME_X,y,350,90,"green");
   drawRect(canvas.getContext("2d"),SCORE_X,y,200,90,"red");
-
   const name = matchClan(await readName(crop(canvas,NAME_X,y,350,90)));
   const score = await readScore(crop(canvas,SCORE_X,y,200,90));
 
@@ -1776,8 +1790,9 @@ window.runOCRMain = async function(){
       if(isDebugMain()){
         document.getElementById("debugMain").appendChild(canvas);
       }
-      for(const p of [TOP1,TOP2,TOP3]){
-        const r = await readTop(canvas,p);
+      const tops = [TOP1, TOP2, TOP3];
+      for(let i=0; i < tops.length; i++){
+        const r = await readTop(canvas, tops[i], i+1);
         if(r.name) map[r.name] = r.score ?? "";
       }
       for(const r of rowsOCR){
