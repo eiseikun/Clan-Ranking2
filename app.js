@@ -59,9 +59,9 @@ const TOP1_SCORE_H = 60;
 
 // ▼2位・3位（小）
 const TOP23_NAME_W = 250;
-const TOP23_NAME_H = 50;
+const TOP23_NAME_H = 70;
 const TOP23_SCORE_W = 170;
-const TOP23_SCORE_H = 50;
+const TOP23_SCORE_H = 70;
 
 // ▼4位以降（大）
 const ROW_NAME_W = 350;
