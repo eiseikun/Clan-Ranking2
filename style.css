@@ -1,25 +1,119 @@
+/* 全体 */
 body{
   font-family: sans-serif;
   padding:20px;
+  background:#f5f7fa;
+  max-width:1200px;
+  margin:0 auto;
 }
 
+/* タイトル */
+h2{
+  margin-bottom:15px;
+}
+
+/* 入力エリア */
+input[type="file"]{
+  display:block;
+  margin-bottom:10px;
+}
+
+/* ファイル選択UI強化 */
+input[type="file"]::file-selector-button{
+  padding:8px 14px;
+  border:none;
+  background:#4a8cff;
+  color:white;
+  border-radius:6px;
+  cursor:pointer;
+}
+input[type="file"]::file-selector-button:hover{
+  background:#336fe0;
+}
+
+/* ボタン */
+button{
+  padding:10px 16px;
+  margin-top:10px;
+  border:none;
+  background:#28a745;
+  color:white;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:14px;
+}
+
+button:hover{
+  background:#218838;
+}
+
+/* OCRボタン青に */
+button:first-of-type{
+  background:#007bff;
+}
+button:first-of-type:hover{
+  background:#0069d9;
+}
+
+/* テーブル */
 table{
   border-collapse: collapse;
   margin-top:20px;
-  width:400px;
+  width:100%;
+  max-width:600px;
+  background:white;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);
+}
+
+thead{
+  background:#f0f2f5;
 }
 
 td,th{
-  border:1px solid #ccc;
-  padding:6px 10px;
+  border:1px solid #ddd;
+  padding:8px 10px;
   text-align:center;
 }
 
-input{
-  width:90px;
+/* 入力欄 */
+td input{
+  width:100%;
+  max-width:100px;
+  padding:4px;
+  border:1px solid #ccc;
+  border-radius:4px;
+}
+
+/* 未入力強調 */
+td input:placeholder-shown{
+  border-color:red;
+  background:#fff5f5;
+}
+
+/* 日付 */
+#date{
+  margin-top:10px;
+  font-weight:bold;
+  font-size:16px;
+}
+
+/* デバッグ */
+#debug{
+  margin-top:20px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
 }
 
 #debug canvas{
-  margin-top:20px;
   border:2px solid #444;
+  max-width:300px;
+}
+
+/* チェックボックス */
+label{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  cursor:pointer;
 }
