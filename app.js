@@ -26,26 +26,26 @@ const clans = [
 
 // ▼1位（中央）
 const TOP1 = {
-  nameX: 450,  // ← 横ズレ
+  nameX: 460,  // ← 横ズレ
   nameY: 590,  // ← 縦ズレ
-  scoreX: 450,
-  scoreY: 650
+  scoreX: 480,
+  scoreY: 660
 };
 
 // ▼2位（左）
 const TOP2 = {
   nameX: 120,
-  nameY: 600,
-  scoreX: 120,
+  nameY: 650,
+  scoreX: 130,
   scoreY: 700
 };
 
 // ▼3位（右）
 const TOP3 = {
   nameX: 850,
-  nameY: 600,
+  nameY: 660,
   scoreX: 850,
-  scoreY: 700
+  scoreY: 740
 };
 
 // =============================
@@ -54,7 +54,7 @@ const TOP3 = {
 // ▼1位（中）
 const TOP1_NAME_W = 250;
 const TOP1_NAME_H = 60;
-const TOP1_SCORE_W = 250;
+const TOP1_SCORE_W = 170;
 const TOP1_SCORE_H = 60;
 
 // ▼2位・3位（小）
@@ -76,19 +76,19 @@ const ROW_SCORE_H = 90;
 // ▼縦位置（全部上下する）
 
 const rows = [
-  { y:950 }, // ← 4位
-  { y:1125 },
-  { y:1300 },
+  { y:880 }, // ← 4位
+  { y:1080 },
+  { y:1200 },
   { y:1475 },
   { y:1650 },
   { y:1825 },
   { y:2000 }
 ];
 // ▼名前位置（左右ズレ）
-const NAME_X = 450;
+const NAME_X = 440;
 
 // ▼スコア位置（超重要）
-const SCORE_X = 850;
+const SCORE_X = 880;
 
 
 // =============================
