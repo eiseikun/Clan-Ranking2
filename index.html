@@ -44,6 +44,19 @@
   <!-- CSV管理 -->
  <div id="manageArea" class="box" style="display:none;">
    
+  
+
+  <input type="file" id="csvFile">
+  <div class="row">
+    <button onclick="importCSV()">CSV取込</button>
+    <button onclick="exportCSV()">CSV出力</button>
+  </div>
+  <!-- 画像 -->
+  <div class="row">
+    <button onclick="saveWeekdayBestImage()">📸 曜日別画像保存</button>
+  </div>
+</div>
+  
    <!-- OCR読取 -->
 <div class="box">
   <h3>📷 OCR読取</h3>
@@ -62,18 +75,6 @@
   <div id="ocrResult"></div>
   <div id="debugMain"></div>
 </div>
-
-  <input type="file" id="csvFile">
-  <div class="row">
-    <button onclick="importCSV()">CSV取込</button>
-    <button onclick="exportCSV()">CSV出力</button>
-  </div>
-  <!-- 画像 -->
-  <div class="row">
-    <button onclick="saveWeekdayBestImage()">📸 曜日別画像保存</button>
-  </div>
-</div>
-  
   
   <!-- データ追加 -->
   <div class="box">
