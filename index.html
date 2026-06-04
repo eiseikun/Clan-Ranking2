@@ -2,42 +2,36 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>クランランキングOCR</title>
 
 <link rel="stylesheet" href="style.css">
 
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
 </head>
 
 <body>
 
-<h1>クランランキング OCR 試作版</h1>
+<h2>クランランキングOCR</h2>
 
-<div class="upload-box">
-    <label>画像①（1～10位付近）</label>
-    <input type="file" id="image1" accept="image/*">
+<input type="file" id="img1"><br><br>
+<input type="file" id="img2"><br><br>
 
-    <label>画像②（11位以降）</label>
-    <input type="file" id="image2" accept="image/*">
+<button onclick="runOCR()">OCR解析</button>
 
-    <button id="analyzeBtn">OCR実行</button>
-</div>
+<h3 id="date"></h3>
 
-<div id="status">待機中</div>
-
-<table id="resultTable">
-    <thead>
-        <tr>
-            <th>クラン名</th>
-            <th>順位</th>
-            <th>スコア(T)</th>
-        </tr>
-    </thead>
-
-    <tbody id="tbody">
-    </tbody>
+<table id="table">
+<thead>
+<tr>
+<th>クラン</th>
+<th>順位</th>
+<th>スコア</th>
+</tr>
+</thead>
+<tbody></tbody>
 </table>
+
+<button onclick="save()">保存</button>
 
 <script type="module" src="app.js"></script>
 
