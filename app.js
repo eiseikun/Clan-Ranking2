@@ -43,7 +43,7 @@ function formatScore(value) {
     return value + "B";
   }
 }
-// ★ T固定表示（1ページ目用）
+// T固定表示（1ページ目用）
 function formatScoreT(value) {
   if (value == null || isNaN(value)) return "-";
   return (value / 1000).toFixed(2) + "T";
@@ -60,66 +60,22 @@ function getWeekday(dateStr) {
 // ■ クラン設定
 // ==============================
 const clanSettings = {
-  "魔導特務隊": {
-    color:"#4472C4",
-    active:true
-  },
- "最狂会": {
-    color:"#00B050",
-    active:true
-  },
-  "IgnisFloris": {
-    color:"#FFCCFF",
-    active:true
-  },
- "ポケポケ会": {
-    color:"#E97132",
-    active:true
-  },
-  "PopoWarren": {
-    color:"#A02B93",
-    active:true
-  },
-  "やまだ家": {
-    color:"#FFC000",
-    active:true
-  },
-  "ねこ海賊団": {
-    color:"#00AEF0",
-    active:true
-  },
-  "たまねぎ班": {
-    color:"#8FAADC",
-    active:true
-  },
-  "猫の旅": {
-    color:"#FF0000",
-    active:true
-  },
-  "天狼の戦弓団": {
-    color:"#00E5FF",
-    active:true
-  },
-  "アチャ伝": {
-    color:"#FF66B2",
-    active:true
-  },
-  "さよならねこ": {
-    color:"#92D050",
-    active:false
-  },
-  "新たなクラン": {
-    color:"#795548",
-    active:false
-  },
+  "魔導特務隊": { color:"#4472C4", active:true },
+  "最狂会": { color:"#00B050", active:true },
+  "IgnisFloris": { color:"#FFCCFF", active:true },
+  "ポケポケ会": { color:"#E97132", active:true },
+  "PopoWarren": { color:"#A02B93", active:true },
+  "やまだ家": { color:"#FFC000", active:true },
+  "ねこ海賊団": { color:"#00AEF0", active:true },
+  "たまねぎ班": { color:"#8FAADC", active:true },
+  "猫の旅": { color:"#FF0000", active:true },
+  "天狼の戦弓団": { color:"#00E5FF", active:true },
+  "アチャ伝": { color:"#FF66B2", active:true },
+  "さよならねこ": { color:"#92D050", active:false },
+  "新たなクラン": { color:"#795548", active:false },
 };
 const allClans = Object.keys(clanSettings);
-
-const activeClans =
-  allClans.filter(
-    c => clanSettings[c].active
-  );
-
+const activeClans = allClans.filter(c => clanSettings[c].active);
 
 // ==============================
 // ■ 初期UI
@@ -160,30 +116,6 @@ window.addEventListener("DOMContentLoaded", () => {
         }
       });
   });
-  // 2ページ目メンバー
-const memberModalWrap =
-  document.getElementById("memberModalCheckboxes");
-
-const allMembers = [
-  ...baseMembers,
-  ...[...new Set(rankList.map(d => d.member))]
-];
-
-allMembers.forEach(m => {
-
-  const label = document.createElement("label");
-
-  const cb = document.createElement("input");
-
-  cb.type = "checkbox";
-  cb.value = m;
-
-  label.appendChild(cb);
-  label.appendChild(document.createTextNode(m));
-
-  memberModalWrap.appendChild(label);
-});
-});
 
 // ==============================
 // ■ ページ切替
@@ -245,6 +177,26 @@ const baseMembers = [
   "RIKKUN","るてまいかぁ","2yan子","ジャック99","あき3","ふしそう",
   "もにゃか","トコブル","EV5009","なはやまか"
 ];
+
+function updateMemberModal() {
+  const wrap = document.getElementById("memberModalCheckboxes");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  const allMembers = [
+    ...baseMembers,
+    ...[...new Set(rankList.map(d => d.member))]
+  ];
+  allMembers.forEach(m => {
+    const label = document.createElement("label");
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.value = m;
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode(m));
+    wrap.appendChild(label);
+  });
+}
+
 // ==============================
 // リアルタイム取得
 // ==============================
@@ -272,8 +224,9 @@ onSnapshot(
     });
     rankList = newData;
     renderRankTable();
-    renderBestScore(); // ★追加
+    renderBestScore();
     updateMemberList();
+    updateMemberModal();
 });
 // 3ページ目用
 onSnapshot(
