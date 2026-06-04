@@ -51,22 +51,22 @@ const TOP3 = {
 // =============================
 // ★★★★★ サイズ調整（超重要）★★★★★
 
-// ▼1位（大きめ）
-const TOP1_NAME_W = 360;
-const TOP1_NAME_H = 100;
-const TOP1_SCORE_W = 360;
-const TOP1_SCORE_H = 110;
+// ▼1位（中）
+const TOP1_NAME_W = 250;
+const TOP1_NAME_H = 60;
+const TOP1_SCORE_W = 250;
+const TOP1_SCORE_H = 60;
 
-// ▼2位・3位（中）
-const TOP23_NAME_W = 300;
-const TOP23_NAME_H = 80;
-const TOP23_SCORE_W = 300;
-const TOP23_SCORE_H = 90;
+// ▼2位・3位（小）
+const TOP23_NAME_W = 250;
+const TOP23_NAME_H = 50;
+const TOP23_SCORE_W = 250;
+const TOP23_SCORE_H = 50;
 
-// ▼4位以降（小）
-const ROW_NAME_W = 300;
-const ROW_NAME_H = 80;
-const ROW_SCORE_W = 300;
+// ▼4位以降（大）
+const ROW_NAME_W = 400;
+const ROW_NAME_H = 90;
+const ROW_SCORE_W = 200;
 const ROW_SCORE_H = 90;
 
 
@@ -74,21 +74,21 @@ const ROW_SCORE_H = 90;
 // ★★★★★ 4位以降ここが一番触る場所 ★★★★★
 
 // ▼縦位置（全部上下する）
-const rows = [
-  { y:1050 }, // ← 4位
-  { y:1200 },
-  { y:1350 },
-  { y:1500 },
-  { y:1650 },
-  { y:1800 },
-  { y:1950 }
-];
 
+const rows = [
+  { y:950 }, // ← 4位
+  { y:1125 },
+  { y:1300 },
+  { y:1475 },
+  { y:1650 },
+  { y:1825 },
+  { y:2000 }
+];
 // ▼名前位置（左右ズレ）
-const NAME_X = 200;
+const NAME_X = 450;
 
 // ▼スコア位置（超重要）
-const SCORE_X = 760;
+const SCORE_X = 850;
 
 
 // =============================
