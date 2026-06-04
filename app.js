@@ -88,7 +88,7 @@ const rows = [
 const NAME_X = 440;
 
 // ▼スコア位置（超重要）
-const SCORE_X = 890;
+const SCORE_X = 895;
 
 
 // =============================
