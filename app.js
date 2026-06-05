@@ -1673,6 +1673,10 @@ function crop(canvas,x,y,w,h){
   const ctx = c.getContext("2d");
   ctx.drawImage(canvas,x,y,w,h,0,0,w*2,h*2);
   preprocess(ctx,c.width,c.height);
+  if(document.getElementById("debugToggleMain")?.checked){
+    document.getElementById("debugMain")?.appendChild(c);
+  }
+
   return c;
 }
 
