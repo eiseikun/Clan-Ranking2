@@ -1842,61 +1842,79 @@ function matchMember(text){
 /* ==========OCR読み取り本体========== */
 // ===== 1ページ =====
 async function readTop(canvas,pos,rank){
+  // ▼枠サイズ（ここ変えると大きさ変わる▼
   let nameW=300,nameH=80,scoreW=230,scoreH=90;
   if(rank===2){nameW=280;nameH=75;scoreW=220;scoreH=85;}
   if(rank===3){nameW=260;nameH=70;scoreW=210;scoreH=80;}
 
   const ctx = canvas.getContext("2d");
 
-  drawRect(ctx,pos.nameX,pos.nameY,nameW,nameH,"green","main");
-  drawRect(ctx,pos.scoreX,pos.scoreY,scoreW,scoreH,"blue","main");
-
+  // ▼枠の表示（デバッグ用）▼
+  drawRect(ctx,pos.nameX,pos.nameY,nameW,nameH,"green","main");//緑＝名前の枠（見てる場所）
+  drawRect(ctx,pos.scoreX,pos.scoreY,scoreW,scoreH,"blue","main");//青＝スコアの枠
+  
+  // ▼実際に読んでる範囲▼
+   // pos.nameX → 横位置
+   // pos.nameY → 縦位置
+   // nameW / nameH → サイズ
   return {
     name: matchClan(await readName(crop(canvas,pos.nameX,pos.nameY,nameW,nameH))),
     score: await readScore(crop(canvas,pos.scoreX,pos.scoreY,scoreW,scoreH),"main")
   };
 }
 
+// ▼ 1ページ（4位以降）
 async function readRow(canvas,y){
   const ctx = canvas.getContext("2d");
-
+  // ▼枠（見た目）▼
   drawRect(ctx,NAME_X,y,350,90,"green","main");
   drawRect(ctx,SCORE_X,y,200,90,"red","main");
 
+  // ▼実際に読んでる範囲▼
   return {
-    name: matchClan(await readName(crop(canvas,NAME_X,y,350,90))),
-    score: await readScore(crop(canvas,SCORE_X,y,200,90))
+    name: matchClan(await readName(crop(canvas, NAME_X, y, 350, 90, "main"))),
+    score: await readScore(crop(canvas,SCORE_X,y,200,90),"main")
   };
 }
+  
 
 // ===== 2ページ =====
 async function readTopMember(canvas,pos,rank){
-  let nameW=300,nameH=80,scoreW=260,scoreH=100;
+  // ▼枠サイズ（ここ変えると大きさ変わる▼
+  let nameW=300,nameH=80,scoreW=230,scoreH=90;
   if(rank===2){nameW=280;nameH=75;scoreW=240;scoreH=95;}
   if(rank===3){nameW=260;nameH=70;scoreW=230;scoreH=90;}
 
   const ctx = canvas.getContext("2d");
 
+  // ▼枠表示▼
   drawRect(ctx,pos.nameX,pos.nameY,nameW,nameH,"green");
   drawRect(ctx,pos.scoreX,pos.scoreY,scoreW,scoreH,"blue");
 
-  return {
+  // ▼実際に読んでる範囲▼
+   return {
     name: matchMember(await readName(crop(canvas,pos.nameX,pos.nameY,nameW,nameH))),
     score: await readScore(crop(canvas,pos.scoreX,pos.scoreY,scoreW,scoreH),"sub")
   };
 }
 
+
+
+// ▼ 2ページ（4位以降）
 async function readRowMember(canvas,y){
   const ctx = canvas.getContext("2d");
 
-  drawRect(ctx,NAME_X2,y,420,110,"green");
-  drawRect(ctx,SCORE_X2,y,260,110,"red");
-
+  // ▼枠（見た目）▼
+  drawRect(ctx,NAME_X2,y,350,90,"green");
+  drawRect(ctx,SCORE_X2,y,200,90,"red");
+  
+  // ▼実際に読んでる範囲▼
   return {
-    name: matchMember(await readName(crop(canvas,NAME_X2,y,420,110))),
-    score: await readScore(crop(canvas,SCORE_X2,y,260,110),"sub")
+    name: matchMember(await readName(crop(canvas,NAME_X2,y,350,90,"sub"))),
+    score: await readScore(crop(canvas,SCORE_X2,y,200,90),"sub")
   };
 }
+
 
 /* ==========OCR実行========== */
 // ===== 1ページ =====
@@ -1998,21 +2016,16 @@ function renderOCRResultHigh(map){
 }
 
 function renderOCRResult2(map){
-  let html="<table>";
+  let html = "<table>";
+  const sorted = Object.entries(map)
+    .sort((a,b)=> (b[1]||0) - (a[1]||0));
 
-  const members=[
-    ...baseMembers,
-    ...[...new Set(rankList.map(d=>d.member))]
-  ];
-
-  for(const m of members){
-    html+=`<tr><td>${m}</td><td><input value="${map[m]??""}" data-member="${m}"></td></tr>`;
+  for(const [m,score] of sorted){
+    html += `<tr><td>${m}</td><td><input value="${score??""}" data-member="${m}"></td></tr>`;
   }
-
-  html+="</table>";
-  document.getElementById("ocrResult2").innerHTML=html;
+  html += "</table>";
+  document.getElementById("ocrResult2").innerHTML = html;
 }
-
 
 window.saveOCRHigh = async function(){
   const date=document.getElementById("ocrDate").value;
