@@ -1647,16 +1647,24 @@ const NAME_X2 = 420;
 const SCORE_X2 = 870;
 
 /* ==========デバッグ関連========== */
+// ===== 1ページ =====
 function isDebugMain(){
   return document.getElementById("debugToggleMain")?.checked;
 }
-function drawRect(ctx,x,y,w,h,color){
-  if(!isDebugMain()) return;
+// ===== 2ページ =====
+function isDebug2(){
+  return document.getElementById("debugToggle2")?.checked;
+}
+
+function drawRect(ctx,x,y,w,h,color,mode="main"){
+  if(mode==="main" && !isDebugMain()) return;
+  if(mode==="sub" && !isDebug2()) return;
 
   ctx.strokeStyle=color;
   ctx.lineWidth=3;
   ctx.strokeRect(x,y,w,h);
 }
+
 
 /* ==========共通画像処理========== */
 function preprocess(ctx,w,h){
@@ -1670,7 +1678,7 @@ function preprocess(ctx,w,h){
   ctx.putImageData(img,0,0);
 }
 // 画像切り抜き＋拡大
-function crop(canvas,x,y,w,h){
+function crop(canvas,x,y,w,h,mode="main"){
   const c = document.createElement("canvas");
   c.width = w*2;
   c.height = h*2;
@@ -1679,10 +1687,14 @@ function crop(canvas,x,y,w,h){
   ctx.drawImage(canvas,x,y,w,h,0,0,w*2,h*2);
   preprocess(ctx,c.width,c.height);
 
-  // デバッグ用表示（切り抜き画像）
-  if(isDebugMain()){
+  if(mode==="main" && isDebugMain()){
     document.getElementById("debugMain")?.appendChild(c);
   }
+
+  if(mode==="sub" && isDebug2()){
+    document.getElementById("debug2")?.appendChild(c);
+  }
+
   return c;
 }
 
@@ -1797,8 +1809,8 @@ async function readTop(canvas,pos,rank){
 
   const ctx = canvas.getContext("2d");
 
-  drawRect(ctx,pos.nameX,pos.nameY,nameW,nameH,"green");
-  drawRect(ctx,pos.scoreX,pos.scoreY,scoreW,scoreH,"blue");
+  drawRect(ctx,pos.nameX,pos.nameY,nameW,nameH,"green","main");
+  drawRect(ctx,pos.scoreX,pos.scoreY,scoreW,scoreH,"blue","main");
 
   return {
     name: matchClan(await readName(crop(canvas,pos.nameX,pos.nameY,nameW,nameH))),
@@ -1809,8 +1821,8 @@ async function readTop(canvas,pos,rank){
 async function readRow(canvas,y){
   const ctx = canvas.getContext("2d");
 
-  drawRect(ctx,NAME_X,y,350,90,"green");
-  drawRect(ctx,SCORE_X,y,200,90,"red");
+  drawRect(ctx,pos.nameX,pos.nameY,nameW,nameH,"green","sub");
+  drawRect(ctx,SCORE_X,y,200,90,"red","main");
 
   return {
     name: matchClan(await readName(crop(canvas,NAME_X,y,350,90))),
@@ -1901,7 +1913,7 @@ window.runOCR2 = async function(){
 
   if(!f1 || !f2) return alert("画像2枚選択して");
 
-  document.getElementById("debugMain").innerHTML="";
+  document.getElementById("debug2").innerHTML="";
   document.getElementById("ocrLoading2").style.display="block";
 
   const map={};
@@ -1913,7 +1925,7 @@ window.runOCR2 = async function(){
       const c = toCanvas(img);
 
       if(isDebugMain()){
-        document.getElementById("debugMain").appendChild(c);
+        document.getElementById("debug2").appendChild(c);
       }
 
       for(let i=0;i<3;i++){
