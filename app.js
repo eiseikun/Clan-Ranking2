@@ -1730,28 +1730,31 @@ function normalizeScore(text){
 }
 
 async function readScore(canvas){
-  const r1 = await Tesseract.recognize(canvas, "eng", {
-    tessedit_char_whitelist: "0123456789.",
+  const results = [];
+  for(let i=0;i<3;i++){
+    const r = await Tesseract.recognize(canvas, "eng", {
+      tessedit_char_whitelist: "0123456789.",
+    });
+    const v = normalizeScore(r.data.text);
+    if(v) results.push(v);
+  }
+  if(results.length === 0) return null;
+  //  最頻値計算
+  const count = {};
+  results.forEach(v=>{
+    count[v] = (count[v] || 0) + 1;
   });
-  const r2 = await Tesseract.recognize(canvas, "eng", {
-    tessedit_char_whitelist: "0123456789.",
-  });
-  const r3 = await Tesseract.recognize(canvas, "eng", {
-    tessedit_char_whitelist: "0123456789.",
-  });
-
-  const v1 = normalizeScore(r1.data.text);
-  const v2 = normalizeScore(r2.data.text);
-  const v3 = normalizeScore(r3.data.text);
-
-  // null除外
-  const values = [v1, v2, v3].filter(v => v);
-  if(values.length === 0) return null;
-  // ソート
-  values.sort((a,b)=>a-b);
-  // 中央値
-  return values[Math.floor(values.length / 2)];
+  let best = null;
+  let max = 0;
+  for(const k in count){
+    if(count[k] > max){
+      max = count[k];
+      best = Number(k);
+    }
+  }
+  return best;
 }
+
 
 // 名前認識
 async function readName(canvas){
