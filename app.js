@@ -1691,17 +1691,13 @@ function crop(canvas,x,y,w,h,isScore=false){
   const ctx = c.getContext("2d");
   ctx.drawImage(canvas,x,y,w,h,0,0,w*2,h*2);
 
-  // ✅ 分岐させる（これ重要）
   if(isScore){
     preprocessScore(ctx,c.width,c.height);
-  }else{
-    preprocess(ctx,c.width,c.height);
   }
-
+  // ✅ 名前は何もしない（ここが重要）
   if(isDebugMain()){
     document.getElementById("debugMain").appendChild(c);
   }
-
   return c;
 }
 
