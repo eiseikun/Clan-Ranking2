@@ -1838,6 +1838,7 @@ window.runOCRMain = async function(){
       const c=toCanvas(img);
       if(document.getElementById("debugToggleMain")?.checked){
         document.getElementById("debugMain").appendChild(c);
+      }
 
 
       for(let i=0;i<3;i++){
@@ -1879,6 +1880,7 @@ window.runOCR2 = async function(){
       const c=toCanvas(img);
       if(document.getElementById("debugToggleMain")?.checked){
         document.getElementById("debugMain").appendChild(c);
+      }
 
 
       for(let i=0;i<3;i++){
