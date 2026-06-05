@@ -1624,7 +1624,7 @@ window.drawChart3 = function () {
 const ocrClans = activeClans;
 // 座標
 const TOP1 = { nameX:460, nameY:590, scoreX:550, scoreY:665 };
-const TOP2 = { nameX:120, nameY:650, scoreX:180, scoreY:700 };
+const TOP2 = { nameX:120, nameY:650, scoreX:180, scoreY:710 };
 const TOP3 = { nameX:850, nameY:670, scoreX:920, scoreY:730 };
 
 const rowsOCR = [
@@ -1740,22 +1740,22 @@ function matchClan(text){
 async function readTop(canvas,pos,rank){
   let nameW, nameH, scoreW, scoreH;
   if(rank === 1){
-    nameW = 300;
-    nameH = 80;
-    scoreW = 230;
-    scoreH = 90;
-  }// 1位の大きさ
-  else if(rank === 2){
     nameW = 280;
     nameH = 75;
-    scoreW = 220;
-    scoreH = 85;
+    scoreW = 150;
+    scoreH = 60;
+  }// 1位の大きさ
+  else if(rank === 2){
+    nameW = 220;
+    nameH = 50;
+    scoreW = 150;
+    scoreH = 45;
   }// 2位の大きさ
   else if(rank === 3){
-    nameW = 260;
-    nameH = 70;
-    scoreW = 210;
-    scoreH = 80;
+    nameW = 240;
+    nameH = 50;
+    scoreW = 160;
+    scoreH = 50;
   }// 3位の大きさ
   drawRect(canvas.getContext("2d"), pos.nameX, pos.nameY, nameW, nameH, "green");
   drawRect(canvas.getContext("2d"), pos.scoreX, pos.scoreY, scoreW, scoreH, "blue");
