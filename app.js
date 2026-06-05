@@ -1703,40 +1703,56 @@ function crop(canvas,x,y,w,h,isScore=false){
 
 // スコア補正
 function normalizeScore(text){
-  text = text.replace("T","");
-  // 変な文字除去
+  if(!text) return null;
+  // T消す
+  text = text.replace(/T/gi,"");
+  // よくある誤認識補正（重要）
+  text = text
+    .replace(/O/g,"0")
+    .replace(/o/g,"0")
+    .replace(/I/g,"1")
+    .replace(/l/g,"1")
+    .replace(/,/g,".")
+    .replace(/、/g,".");
+  // 数字と小数点だけ残す
   text = text.replace(/[^\d.]/g,"");
-  // 複数小数点対策
+  // 小数点複数対策
   const parts = text.split(".");
   if(parts.length > 2){
     text = parts[0] + "." + parts.slice(1).join("");
   }
-  const num = parseFloat(text);
-  if(!num) return null;
+  let num = parseFloat(text);
+  if(isNaN(num)) return null;
   // 異常値補正
-  if(num < 10){
-    return null;
-  }
-  return Math.round(num * 100) / 100;
+  if(num < 10) return null;
+  // 強制2桁
+  return parseFloat(num.toFixed(2));
 }
 
 async function readScore(canvas){
   const r1 = await Tesseract.recognize(canvas, "eng", {
-  tessedit_char_whitelist: "0123456789.",
-});
+    tessedit_char_whitelist: "0123456789.",
+  });
   const r2 = await Tesseract.recognize(canvas, "eng", {
-  tessedit_char_whitelist: "0123456789.",
-});
+    tessedit_char_whitelist: "0123456789.",
+  });
+  const r3 = await Tesseract.recognize(canvas, "eng", {
+    tessedit_char_whitelist: "0123456789.",
+  });
 
-  const s1 = normalizeScore(r1.data.text);
-  const s2 = normalizeScore(r2.data.text);
+  const v1 = normalizeScore(r1.data.text);
+  const v2 = normalizeScore(r2.data.text);
+  const v3 = normalizeScore(r3.data.text);
 
-  if(s1 && s2){
-    return Math.abs(s1 - s2) < 50 ? s1 : s2;
-  }
-
-  return s1 || s2;
+  // null除外
+  const values = [v1, v2, v3].filter(v => v);
+  if(values.length === 0) return null;
+  // ソート
+  values.sort((a,b)=>a-b);
+  // 中央値
+  return values[Math.floor(values.length / 2)];
 }
+
 // 名前認識
 async function readName(canvas){
   const res = await Tesseract.recognize(canvas,"jpn");
