@@ -1797,13 +1797,22 @@ async function readRowMember(canvas,y){
 /* ======== 実行 ======== */
 
 window.runOCRMain = async function(){
+
+  const f1 = document.getElementById("img1Main").files[0];
+  const f2 = document.getElementById("img2Main").files[0];
+
+  if(!f1 || !f2){
+    alert("画像を2枚選択して");
+    return;
+  }
+
   document.getElementById("ocrLoading").style.display="block";
   const map={};
 
   try{
     const imgs=[
-      await loadImage(document.getElementById("img1Main").files[0]),
-      await loadImage(document.getElementById("img2Main").files[0])
+      await loadImage(f1),
+      await loadImage(f2)
     ];
 
     for(const img of imgs){
@@ -1828,14 +1837,21 @@ window.runOCRMain = async function(){
 };
 
 window.runOCR2 = async function(){
+
+  const f1 = document.getElementById("img1_2").files[0];
+  const f2 = document.getElementById("img2_2").files[0];
+
+  if(!f1 || !f2){
+    alert("画像を2枚選択して");
+    return;
+  }
+
   document.getElementById("ocrLoading2").style.display="block";
   const map={};
 
   try{
-    const imgs=[
-      await loadImage(document.getElementById("img1_2").files[0]),
-      await loadImage(document.getElementById("img2_2").files[0])
-    ];
+    const imgs=[ await loadImage(f1), await loadImage(f2) ];
+
 
     for(const img of imgs){
       const c=toCanvas(img);
