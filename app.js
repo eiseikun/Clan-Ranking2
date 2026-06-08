@@ -1659,6 +1659,8 @@ function preprocess(ctx,w,h){
   ctx.putImageData(img,0,0);
 }
 
+
+
 function crop(canvas,x,y,w,h){
   const c = document.createElement("canvas");
   c.width = w*2;
@@ -1668,12 +1670,21 @@ function crop(canvas,x,y,w,h){
   ctx.drawImage(canvas,x,y,w,h,0,0,w*2,h*2);
   preprocess(ctx,c.width,c.height);
 
+  // ページ1
   if(isDebugMain()){
-    document.getElementById("debugMain").appendChild(c);
+    document.getElementById("debugMain")?.appendChild(c);
+  }
+
+  // ページ2
+  if(document.getElementById("debugToggle2")?.checked){
+    document.getElementById("debug2")?.appendChild(c);
   }
 
   return c;
 }
+
+
+
 // スコア補正
 function normalizeScore(text){
   text = text.replace("T","").replace(/[^\d.]/g,"");
